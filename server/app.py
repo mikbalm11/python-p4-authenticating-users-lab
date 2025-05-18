@@ -52,6 +52,54 @@ api.add_resource(ClearSession, '/clear')
 api.add_resource(IndexArticle, '/articles')
 api.add_resource(ShowArticle, '/articles/<int:id>')
 
+class Login(Resource):
+
+    def post(self):
+        username = request.get_json()['username']
+        user = User.query.filter(User.username == username).first()
+        session['user_id'] = user.id
+
+        result = make_response(
+            jsonify({'id': user.id, 'username': user.username}),
+            200
+        )
+
+        return result
+
+api.add_resource(Login, '/login')
+
+class Logout(Resource):
+
+    def delete(self):
+        session['user_id'] = None
+
+        result = make_response(
+            jsonify({}),
+            204
+        )
+
+        return result
+
+api.add_resource(Logout, '/logout')
+
+class CheckSession(Resource):
+
+    def get(self):
+        if session.get('user_id'):
+            user = User.query.filter(User.id == session['user_id']).first()
+            result = make_response(
+                jsonify({'id': user.id, 'username': user.username}),
+                200
+            )
+        else:
+            result = make_response(
+                jsonify({}),
+                401
+            )
+
+        return result
+
+api.add_resource(CheckSession, '/check_session')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
